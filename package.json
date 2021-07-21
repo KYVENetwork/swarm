@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@koa/router": "^10.1.0",
+    "knex": "^0.95.7",
     "koa": "^2.13.1"
   },
   "devDependencies": {

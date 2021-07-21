@@ -1,7 +1,7 @@
 import Koa from "koa";
-import routes from "./routes";
+import router from "./router";
 
 const app = new Koa();
-app.use(routes);
+app.use(router.routes());
 
 app.listen(4242);
