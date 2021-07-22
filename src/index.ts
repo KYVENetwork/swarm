@@ -1,7 +1,25 @@
+import { Knex } from "knex";
 import Koa from "koa";
+import bodyParser from "koa-bodyparser";
+import { connect } from "./db/connect";
+import { up } from "./db/initialize";
 import router from "./router";
 
-const app = new Koa();
-app.use(router.routes());
+declare module "koa" {
+  interface BaseContext {
+    connection: Knex;
+  }
+}
 
-app.listen(4242);
+(async () => {
+  const app = new Koa();
+
+  const connection = connect();
+  await up(connection);
+  app.context.connection = connection;
+
+  app.use(bodyParser());
+  app.use(router.routes());
+
+  app.listen(4242);
+})();
