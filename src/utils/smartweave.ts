@@ -10,9 +10,8 @@ export async function readContract(
   connection: Knex,
   contract: string,
   height?: number,
-  returnValidity?: boolean,
   currentTx?: { txID: string; contract: string }[]
-) {
+): Promise<{ height: number; hash: string; state: any; validity: any }> {
   if (!height) height = (await arweave.network.getInfo()).height;
   let minHeight = 0;
 
@@ -28,12 +27,15 @@ export async function readContract(
   if (cache.length) {
     // Cache found.
     if (height === cache[0].height) {
-      return returnValidity
-        ? {
-            state: JSON.parse(cache[0].state),
-            validity: JSON.parse(cache[0].validity),
-          }
-        : JSON.parse(cache[0].state);
+      return {
+        height,
+        hash: hash({
+          state: JSON.parse(cache[0].state),
+          validity: JSON.parse(cache[0].validity),
+        }),
+        state: JSON.parse(cache[0].state),
+        validity: JSON.parse(cache[0].validity),
+      };
     }
 
     minHeight = cache[0].height + 1;
@@ -94,18 +96,22 @@ export async function readContract(
 
     // @ts-ignore
     swGlobal._activeTx = txInfo.node;
-    swGlobal.contracts.readContractState = (
+    swGlobal.contracts.readContractState = async (
       contractId: string,
       height?: number,
       returnValidity?: boolean
-    ) =>
-      readContract(
+    ) => {
+      const res = await readContract(
         connection,
         contractId,
         height || swGlobal.block.height,
-        returnValidity,
         [...(currentTx || []), { contract, txID: swGlobal.transaction.id }]
       );
+
+      return returnValidity
+        ? { state: res.state, validity: res.validity }
+        : res.state;
+    };
 
     const result = await execute(handler, interaction, state);
 
@@ -134,5 +140,5 @@ export async function readContract(
     })
     .into("contracts");
   // Return state.
-  return returnValidity ? { state, validity } : state;
+  return { height, hash: hash({ state, validity }), state, validity };
 }
