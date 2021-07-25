@@ -1,3 +1,4 @@
+require("dotenv").config();
 import { Knex } from "knex";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
@@ -14,12 +15,12 @@ declare module "koa" {
 (async () => {
   const app = new Koa();
 
-  const connection = connect();
+  const connection = connect(parseInt((process.env.PORT || 4242).toString()));
   await up(connection);
   app.context.connection = connection;
 
   app.use(bodyParser());
   app.use(router.routes());
 
-  app.listen(4242);
+  app.listen(process.env.PORT || 4242);
 })();

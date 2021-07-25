@@ -1,12 +1,15 @@
 import Router from "@koa/router";
+import { query } from "../utils/query";
 import { readContract } from "../utils/smartweave";
 
 export const deployRoute = async (ctx: Router.RouterContext) => {
   const { contract } = ctx.request.body as { contract: string };
 
   if (contract) {
-    const { state } = await readContract(ctx.connection, contract);
+    ctx.body = { status: 201, message: "Recieved" };
 
-    ctx.body = state;
+    readContract(ctx.connection, contract).then(({ height, hash }) => {
+      query(ctx.connection, contract, height, hash);
+    });
   }
 };
